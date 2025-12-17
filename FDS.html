@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Task Dashboard</title>
+
+<style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body{
+    background: linear-gradient(135deg, #1d2671, #c33764);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+/* Main Container */
+.container{
+    width: 900px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Header */
+header{
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+header h1{
+    font-size: 35px;
+}
+
+.subtitle{
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+/* Quote Box */
+.quote-box{
+    background: rgba(255,255,255,0.15);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+/* Task Input */
+.task-input{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.task-input input{
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+}
+
+.task-input button{
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: #00c6ff;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Task List */
+#taskList{
+    list-style: none;
+}
+
+#taskList li{
+    background: rgba(255,255,255,0.12);
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Status Styles */
+.pending{
+    border-left: 5px solid orange;
+}
+
+.progress{
+    border-left: 5px solid yellow;
+}
+
+.completed{
+    border-left: 5px solid lightgreen;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* Actions */
+.task-actions{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.task-actions select{
+    padding: 5px;
+    border-radius: 6px;
+}
+
+.task-actions button{
+    background: red;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <header>
+        <h1>Student Task Dashboard</h1>
+        <p class="subtitle">Plan • Learn • Build • Succeed</p>
+    </header>
+
+    <!-- Quote Section -->
+    <section class="quote-box">
+        <p id="quote"></p>
+    </section>
+
+    <!-- Task Section -->
+    <section class="task-section">
+        <div class="task-input">
+            <input type="text" id="taskInput" placeholder="Enter your task">
+            <button id="addBtn">Add Task</button>
+        </div>
+        <ul id="taskList"></ul>
+    </section>
+</div>
+
+<script>
+const taskInput = document.getElementById("taskInput");
+const taskList = document.getElementById("taskList");
+const addBtn = document.getElementById("addBtn");
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+addBtn.addEventListener("click", addTask);
+renderTasks();
+
+function addTask() {
+    const text = taskInput.value.trim();
+    if (text === "") return;
+
+    const newTask = {
+        id: Date.now(),
+        title: text,
+        status: "pending"
+    };
+
+    tasks.push(newTask);
+    saveTasks();
+    renderTasks();
+    taskInput.value = "";
+}
+
+function renderTasks() {
+    taskList.innerHTML = "";
+
+    tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = task.status;
+
+        li.innerHTML = `
+            <span>${task.title}</span>
+            <div class="task-actions">
+                <select onchange="updateStatus(${task.id}, this.value)">
+                    <option value="pending" ${task.status === "pending" ? "selected" : ""}>Pending</option>
+                    <option value="progress" ${task.status === "progress" ? "selected" : ""}>In Progress</option>
+                    <option value="completed" ${task.status === "completed" ? "selected" : ""}>Completed</option>
+                </select>
+                <button onclick="deleteTask(${task.id})">✖</button>
+            </div>
+        `;
+        taskList.appendChild(li);
+    });
+}
+
+function updateStatus(id, newStatus) {
+    tasks.forEach(task => {
+        if (task.id === id) task.status = newStatus;
+    });
+    saveTasks();
+    renderTasks();
+}
+
+function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    saveTasks();
+    renderTasks();
+}
+
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+/* Quotes */
+const quoteText = document.getElementById("quote");
+
+let quotes = [
+    "Engineering is not about perfect solutions, but better ones.",
+    "Code today, innovate tomorrow.",
+    "Great engineers learn from failures.",
+    "Consistency creates successful engineers.",
+    "Small logic builds big systems.",
+    "Engineers turn ideas into reality.",
+    "Every bug fixed is progress made.",
+    "Learning never stops for engineers."
+];
+
+let quoteIndex = 0;
+shuffleQuotes();
+showNextQuote();
+setInterval(showNextQuote, 10000);
+
+function shuffleQuotes() {
+    for (let i = quotes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
+    }
+}
+
+function showNextQuote() {
+    if (quoteIndex >= quotes.length) {
+        shuffleQuotes();
+        quoteIndex = 0;
+    }
+    quoteText.innerText = quotes[quoteIndex++];
+}
+</script>
+
+</body>
+</html>
